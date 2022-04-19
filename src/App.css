@@ -59,6 +59,10 @@ button.close {
   display: block;
 }
 
+a {
+  text-decoration: none;
+}
+
 /* Loading CSS */
 .loading {
   --count: 5;

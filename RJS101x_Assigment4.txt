@@ -1,3 +1,3 @@
 link repository: https://github.com/huypham00it/RJS_ASM4
 Branch: RJS101x_Assignment4_huypvFX16007@funix.edu.vn (co ban)
-        RJS101x_Assignment4_anv@funix.edu.vn_nangcao (nang cao)
+        RJS101x_Assignment4_huypvFX16007@funix.edu.vn_nangcao (nang cao)

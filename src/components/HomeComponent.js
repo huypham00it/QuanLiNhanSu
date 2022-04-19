@@ -1,7 +1,9 @@
 import React from 'react';
 import {Card, CardFooter} from 'reactstrap';
 
-const Home = ({staffs, departments}) => {
+import { Loading } from './LoadingComponent';
+
+const Home = ({staffs, departments, staffsLoading, staffsErrMess, departmentsLoading, departmentsErrMess}) => {
     return (
         <div className="container">
             <div className="row">

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Breadcrumb, BreadcrumbItem, Button, Modal, ModalHeader, ModalBody, FormGroup, Form, Label, Input, Col, Row } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import Staff from './StaffsComponent';
+import { Loading } from './LoadingComponent';
 import { Control, LocalForm, Errors } from 'react-redux-form';
 
 const required = (val) => val && val.length;
@@ -74,8 +75,8 @@ class StaffFilter extends Component {
     }
 
     render() {
-        const currentStaffs = JSON.parse(localStorage.getItem('staffs'))
-        const staffs = currentStaffs.filter((staff => staff.name.toLowerCase().indexOf(this.state.filterName.toLocaleLowerCase()) !== -1 && staff.department.name.indexOf(this.state.filterDepartment) !== -1));
+        const currentStaffs = this.props.staffs;
+        const staffs = currentStaffs.filter((staff => staff.name.toLowerCase().indexOf(this.state.filterName.toLocaleLowerCase()) !== -1 && staff.departmentId.indexOf(this.state.filterDepartment) !== -1));
         if(this.state.sortName){
             staffs.sort(function(a, b){
                 const nameA = a.name.toLowerCase();
@@ -146,7 +147,7 @@ class StaffFilter extends Component {
                         >
                             <option value="" >All</option>
                             {this.props.departments.map(department => (
-                                <option key={department.id} value={department.name}>{department.name}</option>
+                                <option key={department.id} value={department.id}>{department.name}</option>
                             ))}
                         </select>
                     </div>
@@ -160,8 +161,8 @@ class StaffFilter extends Component {
     
                         
                     </div>
-
-                    <Staff staffs={staffs} />
+                    {this.props.staffsLoading ? <Loading /> : <Staff staffs={staffs} /> }
+                    {this.props.staffsFailed && <h4>{staffs.errMess}</h4>}     
                 </div>
                 <Modal isOpen={this.state.isModalOpen} toggle={this.toggleModal}>
                     <ModalHeader toggle={this.toggleModal}>
