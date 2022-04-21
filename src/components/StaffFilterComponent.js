@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
-import { Breadcrumb, BreadcrumbItem, Button, Modal, ModalHeader, ModalBody, FormGroup, Form, Label, Input, Col, Row } from 'reactstrap';
+import { Breadcrumb, BreadcrumbItem, Button, Modal,
+         ModalHeader, ModalBody, FormGroup, Form, 
+         Label, Input, Col, Row, FormFeedback } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import Staff from './StaffsComponent';
-import { Loading } from './LoadingComponent';
+import Loading from './LoadingComponent';
 import { Control, LocalForm, Errors } from 'react-redux-form';
+import dateFormat from 'dateformat';
 
 const required = (val) => val && val.length;
-const maxLength = (len) => (val) => !(val) || (val.length <= len);
-const minLength = (len) => (val) => val && (val.length >= len) && (val !== "");
+const maxLength = (len) => (val) => !val || val.length <= len;
+const minLength = (len) => (val) => val && val.length >= len;
+const isNumber = (val) => !isNaN(Number(val));
 
 class StaffFilter extends Component {
     constructor(props) {
@@ -17,20 +21,42 @@ class StaffFilter extends Component {
             filterName: "",
             filterDepartment: "",
             sortName: false,
+            staffsList: [],
             isModalOpen: false,
-            dayofbirth: new Date().toString(),
-            startdate: new Date().toString(),
-            annualleave: 0,
-            overTime: 0,
-            salaryscale: 1,
-            department: 'Sale'
+            doB: "",
+            startDate: "",
+            departmentId: "Dept01",
+            image: "/assets/images/alberto.png",
+            touched: {
+                doB: false,
+                startDate: false
+            }
         }
 
         this.toggleModal = this.toggleModal.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
         this.handleSearch = this.handleSearch.bind(this)
+        this.handleBlur = this.handleBlur.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
     }
 
+    handleBlur = (field) => (evt) => {
+        this.setState({
+          touched: { ...this.state.touched, [field]: true }
+        });
+
+    };
+
+    handleInputChange(event) {
+        const target = event.target;
+        const value = target.value;
+        const name = target.name;
+    
+        this.setState({
+          [name]: value
+        });
+
+      }
     handleSearch(event){
         this.setState({
             filterName: this.filtername.value
@@ -46,37 +72,54 @@ class StaffFilter extends Component {
     }
 
     handleSubmit(values){
-        
-        const newStaff = {
-            id: JSON.parse(localStorage.getItem('staffs')).length,
-            name: values.name,
-            doB: new Date(values.dayofbirth).toISOString(),
-            salaryScale: parseInt(values.salaryscale),
-            startDate: new Date(values.startdate).toISOString(),
-            department: this.props.departments.filter((department) => department.name === values.department)[0],
-            annualLeave: parseInt(values.annualleave),
-            overTime: parseInt(values.overtime),
-            image: '/assets/images/default.jpg'
-        }
+        if(!this.state.doB || !this.state.startDate)
+            this.setState({
+                touched: {
+                    doB: true,
+                    startDate: true
+                }
+            })
+        else {
+            const name = values.name;
+            const doB = new Date(this.state.doB).toISOString();
+            const salaryScale= parseInt(values.salaryscale);
+            const startDate = new Date(this.state.startDate).toISOString();
+            const departmentId =this.state.departmentId;
+            const annualLeave = values.annualleave;
+            const overTime = values.overtime;
+            const image = '/assets/images/alberto.png';
+            const salary = (3000000 * salaryScale) + (overTime / 8 * 200000);
 
-        const staffs = JSON.parse(localStorage.getItem('staffs'))
-        staffs.push(newStaff);
-        localStorage.removeItem('staffs')
-        localStorage.setItem('staffs', JSON.stringify(staffs));
-        this.setState({
-            dayofbirth: new Date().toString(),
-            startdate: new Date().toString(),
-            annualleave: 0,
-            overTime: 0,
-            salaryscale: 1,
-            department: 'Sale'
-        })
-        this.toggleModal()
+            this.props.postStaff(name, doB, salaryScale, startDate, departmentId, annualLeave, overTime, image, salary)
+        }
+    }
+
+    //check input date
+
+    validate(doB, startDate) {
+        const errors = {
+            doB: "",
+            startDate: ""
+        };
+
+        if (this.state.touched.doB && doB.length < 1)
+            errors.doB = "Yêu cầu nhập ";
+        if (this.state.touched.startDate && startDate.length < 1)
+            errors.startDate = "Yêu cầu nhập";
+        
+        return errors;
     }
 
     render() {
-        const currentStaffs = this.props.staffs;
-        const staffs = currentStaffs.filter((staff => staff.name.toLowerCase().indexOf(this.state.filterName.toLocaleLowerCase()) !== -1 && staff.departmentId.indexOf(this.state.filterDepartment) !== -1));
+        const staffsList = this.props.staffs;
+        const staffs = staffsList.filter((staff) => {
+            if ( this.state.filterName === "") return staff;
+            else if( staff.name.toLowerCase().includes(this.state.filterName.toLowerCase() && staff.departmentId.includes(this.state.filterDepartment)))
+                return staff;
+            return 0;
+            })
+        const errors = this.validate(this.state.doB, this.state.startDate)
+
         if(this.state.sortName){
             staffs.sort(function(a, b){
                 const nameA = a.name.toLowerCase();
@@ -161,7 +204,7 @@ class StaffFilter extends Component {
     
                         
                     </div>
-                    {this.props.staffsLoading ? <Loading /> : <Staff staffs={staffs} /> }
+                    {this.props.staffsLoading ? <Loading /> : <Staff staffs={staffs} />}
                     {this.props.staffsFailed && <h4>{staffs.errMess}</h4>}     
                 </div>
                 <Modal isOpen={this.state.isModalOpen} toggle={this.toggleModal}>
@@ -170,9 +213,9 @@ class StaffFilter extends Component {
                     </ModalHeader>
                     <ModalBody>
                         <LocalForm onSubmit={(values) => this.handleSubmit(values)}>
-                            <Row className="form-group">
-                                <Label htmlFor="name">Tên</Label>
-                                <Col>
+                            <Row className="control-group">
+                                <Label htmlFor="name" md={4}>Tên</Label>
+                                <Col md={8}>
                                     <Control.text 
                                         model=".name"
                                         className="form-control"
@@ -189,114 +232,136 @@ class StaffFilter extends Component {
                                         show="touched"
                                         messages={{
                                             required: "Yêu cầu nhập",
-                                            minLength: "Yêu cầu từ 2 ký tự trở lên",
+                                            minLength: " từ 2 ký tự trở lên",
                                             maxLength: "Yêu cầu ít hơn 30 ký tự"
                                         }}
                                     />
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="dayofbirth">Ngày sinh</Label>
-                                <Col>
-                                    <Control
-                                        className="form-control"
-                                        model=".dayofbirth"
-                                        type="date" id="dayofbirth" name="dayofbirth" 
-                                        value={this.state.dayofbirth}
-                                        onChange={(e) => this.setState({dayofbirth: e.target.value})}
-                                        validators={{
-                                            required
-                                        }}
+                            <Row className="control-group">
+                                <Label htmlFor="doB" md={4}>Ngày sinh</Label>
+                                <Col md={8}>
+                                    <Input
+                                        type="date"
+                                        id="doB" 
+                                        name="doB" 
+                                        valid={errors.doB === ""}
+                                        invalid={errors.doB !== ""}
+                                        onBlur={this.handleBlur("doB")}
+                                        onChange={this.handleInputChange}
                                     />
-                                    <Errors 
-                                        className="text-danger"
-                                        model=".dayofbirth"
-                                        show="touched"
-                                        messages={{
-                                            required: "Yêu cầu nhập"
-                                        }}
-                                    />
+                                    <FormFeedback>{errors.doB}</FormFeedback>
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="startdate">Ngày vào công ty</Label>
-                                <Col>
-                                    <Control
-                                        className="form-control"
-                                        model=".startdate"
-                                        type="date" id="startdate" name="startdate" 
-                                        value={this.state.startdate}
-                                        onChange={(e) => this.setState({startdate: e.target.value})}
-                                        validators={{
-                                            required
-                                        }}
+                            <Row className="control-group">
+                                <Label htmlFor="startdate" md={4}>Ngày vào công ty</Label>
+                                <Col md={8}>
+                                    <Input
+                                        type="date" 
+                                        id="startDate" 
+                                        name="startDate" 
+                                        valid={errors.startDate === ""}
+                                        invalid={errors.startDate !== ""}
+                                        onBlur={this.handleBlur("startDate")}
+                                        onChange={this.handleInputChange}
                                     />
-                                    <Errors 
-                                        className="text-danger"
-                                        model=".startdate"
-                                        show="touched"
-                                        messages={{
-                                            required: "Yêu cầu nhập"
-                                        }}
-                                    />
+                                    <FormFeedback>{errors.startDate}</FormFeedback>
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="department">Phòng ban</Label>
-                                <Col>
-                                    <Control.select 
-                                        className="form-control"
-                                        model=".department"
-                                        id="department" name="department"
-                                        defaultValue={this.state.department}
+                            <Row className="control-group">
+                                <Label htmlFor="department" md={4}>Phòng ban</Label>
+                                <Col md={8}>
+                                    <select 
+                                        id="department" 
+                                        name="department"
+                                        value={this.state.departmentId}
+                                        onChange={(e) => this.setState({departmentId: e.target.value})}
                                     >
                                         {this.props.departments.map((ele) => (
-                                            <option key={ele.id}>{ele.name}</option>
+                                            <option key={ele.id} value={ele.id}>{ele.name}</option>
                                         ))}
-                                    </Control.select>
+                                    </select>
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="salaryscale">Hệ số lương</Label>
-                                <Col>
+                            <Row className="control-group">
+                                <Label htmlFor="salaryscale" md={4}>Hệ số lương</Label>
+                                <Col md={8}>
                                     <Control.text
                                         className="form-control"
                                         model=".salaryscale"
                                         type="number"
-                                        id="salaryscale" name="salaryscale" 
-                                        value={this.state.salaryscale}
-                                        defaultValue={this.state.salaryscale}
-                                        onChange={(e) => this.setState({salaryscale: e.target.value})}
+                                        id="salaryscale" 
+                                        name="salaryscale" 
+                                        defaultValue="1"
+                                        validators = {{
+                                            required,
+                                            isNumber
+                                        }}
+                                    />
+                                    <Errors 
+                                        model=".salaryscale"
+                                        className="text-danger"
+                                        show="touched"
+                                        messages={{
+                                            required: "Yêu cầu nhập",
+                                            isNumber: "Phải là chữ số"
+                                        }}
                                     />
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="annualleave">Số ngày nghỉ còn lại</Label>
-                                <Col>
+                            <Row className="control-group">
+                                <Label htmlFor="annualleave" md={4}>Số ngày nghỉ còn lại</Label>
+                                <Col md={8}>
                                     <Control
                                         className="form-control"
                                         model=".annualleave"
-                                        type="number" id="anualleave" name="anualleave" 
-                                        value={this.state.annualleave}
-                                        defaultValue={this.state.annualleave}
-                                        onChange={(e) => this.setState({anualleave: e.target.value})}
+                                        type="number" 
+                                        id="anualleave" 
+                                        name="anualleave" 
+                                        defaultValue="0"
+                                        validators = {{
+                                            required,
+                                            isNumber
+                                        }}
+                                    />
+                                    <Errors 
+                                        model=".salaryscale"
+                                        className="text-danger"
+                                        show="touched"
+                                        messages={{
+                                            required: "Yêu cầu nhập",
+                                            isNumber: "Phải là chữ số"
+                                        }}
                                     />
                                 </Col>
                             </Row>
-                            <Row className="form-group">
-                                <Label htmlFor="overtime">Số ngày đã làm thêm</Label>
-                                <Col>
+                            <Row className="control-group">
+                                <Label htmlFor="overtime" md={4}>Số ngày đã làm thêm</Label>
+                                <Col md={8}>
                                     <Control
                                         className="form-control"
                                         model=".overtime"
-                                        type="number" id="overtime" name="overtime" 
-                                        value={this.state.overTime}
-                                        defaultValue={this.state.overTime}
-                                        onChange={(e) => this.setState({overTime: e.target.value})}
+                                        type="number" 
+                                        id="overtime" 
+                                        name="overtime" 
+                                        defaultValue="0"
+                                        validators = {{
+                                            required,
+                                            isNumber
+                                        }}
+                                    />
+                                    <Errors 
+                                        model=".salaryscale"
+                                        className="text-danger"
+                                        show="touched"
+                                        messages={{
+                                            required: "Yêu cầu nhập",
+                                            isNumber: "Phải là chữ số"
+                                        }}
                                     />
                                 </Col>
                             </Row>
-                            <Row className="form-group mt-2">
+                            <Row className="control-group mt-2">
                                 <Button type="submit">Thêm</Button>
                             </Row>
                         </LocalForm>

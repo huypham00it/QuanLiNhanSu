@@ -1,3 +1,7 @@
+export const ADD_STAFF = 'ADD_STAFF';
+export const DELETE_STAFF = 'DELETE_STAFF';
+export const DELETE_STAFF_LOADING = 'DELETE_STAFF_LOADING';
+export const UPDATE_STAFF = 'UPDATE_STAFF';
 export const GET_STAFFS = 'GET_STAFFS';
 export const STAFFS_LOADING = 'STAFFS_LOADING';
 export const STAFFS_FAILED = 'STAFFS_FAILED';

@@ -3,26 +3,38 @@ import {Breadcrumb, BreadcrumbItem, CardImg, Button, Modal, ModalHeader, ModalBo
 import dateFormat from 'dateformat';
 import {Link} from 'react-router-dom';
 import { Control, LocalForm, Errors } from 'react-redux-form';
+import { FadeTransform } from 'react-animation-components';
 
 const required = (val) => val && val.length;
 const maxLength = (len) => (val) => !(val) || (val.length <= len);
 const minLength = (len) => (val) => val && (val.length >= len) && (val !== "");
 
-const DetailStaff = ({staff, departments}) => {
+const DetailStaff = ({staff, departments, onUpdateStaff, onDeleteStaff}) => {
     const department = departments.filter(department => department.id === staff.departmentId)[0].name;
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [doB, setDoB] = useState(new Date(staff.doB).toString());
-    const [startDate, setStartDate] = useState(new Date(staff.startDate).toString());
-    const [annualLeave, setAnnualLeave] = useState(staff.annualLeave);
-    const [overTime, setOverTime] = useState(staff.overTime);
-    const [salaryScale, setSalaryScale] = useState(staff.salaryScale);
-    const [currDepartment, setCurrDepartment] = useState(staff.departmentId);
 
     const toggleModal = () => setIsModalOpen(!isModalOpen);
     
-    const handleSubmit = (values) => {
-        console.log(values)
+    const handleUpdate = (values) => {
+        const updatedStaff = {
+            id: staff.id,
+            name : values.name,
+            doB : new Date(values.dayofbirth).toISOString(),
+            salaryScale: parseInt(values.salaryscale),
+            startDate : new Date(values.startdate).toISOString(),
+            departmentId :values.department,
+            annualLeave : values.annualleave,
+            overTime : values.overtime,
+            image : '/assets/images/alberto.png',
+            salary : (3000000 * parseInt(values.salaryscale)) + (values.overtime / 8 * 200000),
+        }
+
+        onUpdateStaff(updatedStaff);
     } 
+
+    const handleDelete = (id) => {
+        onDeleteStaff(id);
+    }
 
     return (
         <div className="container">
@@ -48,13 +60,13 @@ const DetailStaff = ({staff, departments}) => {
                     <p>Số ngày nghỉ còn lại: {staff.annualLeave}</p>
                     <p>Số ngày đã làm thêm: {staff.overTime}</p>
                     <Button onClick={toggleModal} className="mx-2" color="primary">Chỉnh sửa</Button>
-                    <Button className="btn-warning">Xóa</Button>
+                    <Button onClick={() => handleDelete(staff.id)} className="btn-warning">Xóa</Button>
                 </div>
             </div>
             <Modal isOpen={isModalOpen} toggle={toggleModal}>
                     
                     <ModalBody>
-                        <LocalForm onSubmit={(values) => handleSubmit(values)}>
+                        <LocalForm onSubmit={(values) => handleUpdate(values)}>
                             <Row className="form-group">
                                 <Label htmlFor="name">Tên</Label>
                                 <Col>
@@ -62,6 +74,7 @@ const DetailStaff = ({staff, departments}) => {
                                         model=".name"
                                         className="form-control"
                                         id="name" name="name" 
+                                        defaultValue={staff.name}
                                         validators={{
                                             required, 
                                             minLength: minLength(2),
@@ -87,6 +100,7 @@ const DetailStaff = ({staff, departments}) => {
                                         className="form-control"
                                         model=".dayofbirth"
                                         type="date" id="dayofbirth" name="dayofbirth" 
+                                        defaultValue={dateFormat(staff.doB, 'yyyy-mm-dd')}
                                         validators={{
                                             required
                                         }}
@@ -107,7 +121,8 @@ const DetailStaff = ({staff, departments}) => {
                                     <Control
                                         className="form-control"
                                         model=".startdate"
-                                        type="date" id="startdate" name="startdate" 
+                                        type="date" id="startdate" name="startdate"
+                                        defaultValue={dateFormat(staff.startDate, 'yyyy-mm-dd')} 
                                         validators={{
                                             required
                                         }}
@@ -129,9 +144,11 @@ const DetailStaff = ({staff, departments}) => {
                                         className="form-control"
                                         model=".department"
                                         id="department" name="department"
+                                        defaultValue={staff.departmentId}
                                     >
-                                        {departments.map((ele) => (
-                                            <option key={ele.id}>{ele.name}</option>
+                                        <option value={staff.departmentId}>{department}</option>
+                                        {departments.filter(dept => dept.id !== staff.departmentId).map((ele) => (
+                                            <option key={ele.id} value={ele.id}>{ele.name}</option>
                                         ))}
                                     </Control.select>
                                 </Col>
@@ -143,6 +160,7 @@ const DetailStaff = ({staff, departments}) => {
                                         className="form-control"
                                         model=".salaryscale"
                                         type="number"
+                                        defaultValue={staff.salaryScale}
                                         id="salaryscale" name="salaryscale" 
                                     />
                                 </Col>
@@ -154,6 +172,7 @@ const DetailStaff = ({staff, departments}) => {
                                         className="form-control"
                                         model=".annualleave"
                                         type="number" id="anualleave" name="anualleave" 
+                                        defaultValue={staff.annualLeave}
                                     />
                                 </Col>
                             </Row>
@@ -164,11 +183,12 @@ const DetailStaff = ({staff, departments}) => {
                                         className="form-control"
                                         model=".overtime"
                                         type="number" id="overtime" name="overtime" 
+                                        defaultValue={staff.overTime}
                                     />
                                 </Col>
                             </Row>
                             <Row className="form-group mt-2">
-                                <Button type="submit">Thêm</Button>
+                                <Button type="submit">Sửa</Button>
                             </Row>
                         </LocalForm>
                     </ModalBody>
