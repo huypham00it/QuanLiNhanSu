@@ -3,11 +3,10 @@ import {Breadcrumb, BreadcrumbItem, CardImg, Button, Modal, ModalHeader, ModalBo
 import dateFormat from 'dateformat';
 import {Link} from 'react-router-dom';
 import { Control, LocalForm, Errors } from 'react-redux-form';
-import { FadeTransform } from 'react-animation-components';
 
 const required = (val) => val && val.length;
 const maxLength = (len) => (val) => !(val) || (val.length <= len);
-const minLength = (len) => (val) => val && (val.length >= len) && (val !== "");
+const minLength = (len) => (val) => val && (val.length >= len);
 
 const DetailStaff = ({staff, departments, onUpdateStaff, onDeleteStaff}) => {
     const department = departments.filter(department => department.id === staff.departmentId)[0].name;

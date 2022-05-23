@@ -12,6 +12,8 @@ import Department from './DepartmentComponent';
 import DetailDepartment from './DetailDepartmentComponent';
 import Salary from './SalaryComponent';
 import Loading from './LoadingComponent';
+import Test from './TestComponent';
+
 
 const mapStateToProps = state => {
     return {
@@ -92,6 +94,7 @@ class Main extends Component {
                     <Route path="/departments/:departmentId" component={departmentWithId} />
                     <Route exact path="/salary" component={() => <Salary staffsSalary={this.props.staffsSalary.staffsSalary} />} />
                     <Route exact path="/loading" component={() => <Loading />} />
+                    <Route exact path="/test" component={() => <Test />} />
                     <Redirect to="/home" />
                 </Switch>
                 <Footer />

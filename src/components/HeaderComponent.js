@@ -8,7 +8,8 @@ class Header extends Component {
 
         this.toggleNav = this.toggleNav.bind(this);
         this.state = {
-            isNavOpen: false
+            isNavOpen: false, 
+            test: ''
         };
     }
 
@@ -44,6 +45,7 @@ class Header extends Component {
                                 </NavItem>
                             </Nav>
                         </Collapse>
+                        <input onChange={(e) => this.setState({test:e.target.value})} />
                     </div>
                 </Navbar>
             </>

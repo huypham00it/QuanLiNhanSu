@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 import Staff from './StaffsComponent';
 import Loading from './LoadingComponent';
 import { Control, LocalForm, Errors } from 'react-redux-form';
-import dateFormat from 'dateformat';
 
 const required = (val) => val && val.length;
 const maxLength = (len) => (val) => !val || val.length <= len;
@@ -21,7 +20,6 @@ class StaffFilter extends Component {
             filterName: "",
             filterDepartment: "",
             sortName: false,
-            staffsList: [],
             isModalOpen: false,
             doB: "",
             startDate: "",
@@ -114,7 +112,7 @@ class StaffFilter extends Component {
         const staffsList = this.props.staffs;
         const staffs = staffsList.filter((staff) => {
             if ( this.state.filterName === "") return staff;
-            else if( staff.name.toLowerCase().includes(this.state.filterName.toLowerCase() && staff.departmentId.includes(this.state.filterDepartment)))
+            else if( staff.name.toLowerCase().includes(this.state.filterName.toLowerCase()) && staff.departmentId.includes(this.state.filterDepartment))
                 return staff;
             return 0;
             })

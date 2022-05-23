@@ -7,6 +7,27 @@ export const addStaff = (staff) => ({
     payload: staff
 })
 
+export const postTest = (staff) => (dispatch) => {
+    return fetch('ur' + '/dfdsf', {
+        method: 'POST',
+        body: JSON.stringify(staff),
+        headers: {'Content-type': 'application/json'},
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if(response.ok)
+            return response;
+        else {
+            const err = new Error('Error:' + response.status + response.statusText)
+            err.response = response;
+            throw err;
+        }
+    })
+    .then(response => response.json())
+    .then(response => dispatch(addStaff(response)))
+    .catch(err => console.log(err))
+}
+
 export const postStaff = (name, doB, salaryScale, startDate, departmentId, annualLeave, overTime, image, salary) => (dispatch) => {
     const newStaff = {
         name,
